@@ -4,7 +4,7 @@
 
 import serial
 import struct
-
+import ctypes
 
 class MotorMsgProtocol:
     def __init__(self, port, buadrate = 9600):
@@ -16,14 +16,20 @@ class MotorMsgProtocol:
         self.BUADRATE = buadrate
         self.ser = serial.Serial(PORT, BUADRATE)
 
-    def send(self, direction: str, speed: float):
+    def send(self, direction: ctypes.c_uint8, speed: ctypes.c_uint8):
         """
         Message Format:
-        |{F,B,L,R}|Speed [0..1]|
+        0: Forward
+        1: Backwards
+        2: Left
+        3: Right
+        Speed: 0-255
         """
-        string_length = len(direction)
-        format_string = f">B{string_length}sf"
-        msg = struct.pack(format_string, string_length, text.encode('ascii'), speed)
+        direction = ctypes.c_uint8(direction)
+        speed = ctypes.c_uint8(speed)
+
+
+        msg = struct.pack('>BB', direction.value, speed.value)
         self.ser.write(msg)
 
     def receive(self):
